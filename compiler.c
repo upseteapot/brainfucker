@@ -9,7 +9,7 @@ char *format_file(const char *file_path)
 {
     FILE *file = fopen(file_path, "r");
     if (file == NULL) {
-        printf("Could not open '%s'.\n", file_path);
+        printf("[NOTE]: Could not open '%s'.\n", file_path);
         return NULL;
     }
     fseek(file, 0, SEEK_END);
@@ -68,7 +68,7 @@ int interpret_code(const char *formatted_file, Deque *deque)
                 *deque_get(deque) = fgetc(stdin);
                 break;
             default:
-                printf("Unknow instruction '%c'.\n", formatted_file[i]);
+                printf("[NOTE]: Unknow instruction '%c'.\n", formatted_file[i]);
                 return -1;
                 break;
         }
@@ -87,22 +87,22 @@ void print_usage()
 
 int simulate(int argc, char **argv)
 {
-    printf("Formating '%s'.\n", argv[2]);
+    printf("[NOTE]: Formating '%s'.\n", argv[2]);
     char *formatted_file = format_file(argv[2]);
     if (formatted_file == NULL) {
-        printf("Formatation failed.\n");
+        printf("[NOTE]: Formatation failed.\n");
         return -1;
     }
-    printf("Interpreting code.\n");
+    printf("[NOTE]: Interpreting code.\n");
     Deque deque;
     deque_create(&deque, 5);
     if (interpret_code(formatted_file, &deque)) {
-        printf("Interpretation failed.\n");
+        printf("[NOTE]: Interpretation failed.\n");
         deque_free(&deque);
         free(formatted_file);
         return -1;
     }
-    printf("\nExiting.\n");
+    printf("\n[NOTE]: Exiting.\n");
     deque_free(&deque);
     free(formatted_file);
     return 0;
@@ -110,15 +110,15 @@ int simulate(int argc, char **argv)
 
 int format(int argc, char **argv) 
 {
-    printf("Formating '%s'.\n", argv[2]);
+    printf("[NOTE]: Formating '%s'.\n", argv[2]);
     char *formatted_file = format_file(argv[2]);
     if (formatted_file == NULL) {
-        printf("Formatation failed.\n");
+        printf("[NOTE]: Formatation failed.\n");
         return -1;
     }
     FILE *new_file = fopen(argv[3], "w");
     if (new_file == NULL) {
-        printf("Could not open '%s'.\n", argv[3]); 
+        printf("[NOTE]: Could not open '%s'.\n", argv[3]); 
         return -1;
     }
     fprintf(new_file, formatted_file);
