@@ -9,4 +9,3 @@ main: ./*.c
 
 clean:
 	rm -f brainfucker
-
