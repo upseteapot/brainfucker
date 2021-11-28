@@ -13,8 +13,8 @@ Formats a brainfuck file, which means delete all whitespaces and new line charct
 ```
 ./brainfucker for path-to-file.b new-file-path.b
 ```  
-**Generate Assembly (x86_64)**
-Generates x86_64 assembly code. The output file will be created in the same directory as the source file, following this pattern: *file_name.b.asm*.
+**Generate Assembly (x86_64)**  
+Generates x86_64 assembly code. The output file will be created in the same directory as the source file, following this file pattern: *file_name.b.asm*.
 ```
-./brainfucker asm path-to-file.asm
+./brainfucker asm path-to-file.b
 ```
