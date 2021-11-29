@@ -106,65 +106,59 @@ int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint
         return -1;
     }
     fprintf(file, "section .data\n");
-    fprintf(file, "  x db 0\n");
+    fprintf(file, "  x dd 0\n");
     fprintf(file, "  buffer times %d dd 0\n", size);
     fprintf(file, "section .text\n");
     fprintf(file, "  global _start\n");
-    fprintf(file, "_printcell:\n");
-    fprintf(file, "  mov rcx, [rbx]\n");
-    fprintf(file, "  mov [x], rcx\n");
+    fprintf(file, "_printecx:\n");
+    fprintf(file, "  mov [x], ecx\n");
     fprintf(file, "  mov rax, 1\n");
     fprintf(file, "  mov rdi, 1\n");
     fprintf(file, "  mov rsi, x\n");
-    fprintf(file, "  mov rdx, 4\n");
+    fprintf(file, "  mov rdx, 1\n");
     fprintf(file, "  syscall\n");
     fprintf(file, "  ret\n");
     fprintf(file, "_start:\n");
-    fprintf(file, "  mov rbx, buffer\n");
-    fprintf(file, "  add rbx, %d\n", start);
-    int32_t dcell = 0;
-    int32_t dindex = 0;
+    int32_t sum = 0;
+    int32_t index = start;
+    uint32_t loop_count = 0;
     char prev_char = ' ';
     char curr_char = ' ';
     for (uint32_t i=0; i < strlen(formatted_file); i++) {
         curr_char = formatted_file[i];
         if ((prev_char == '+' || prev_char == '-') &&
             (curr_char != '+' && curr_char != '-')) {
-            if (dcell > 0) {
-                fprintf(file, "  add dword [rbx], %d\n", dcell);
-            } else if (dcell < 0) {
-                fprintf(file, "  sub dword [rbx], %d\n", -dcell);
+            if (sum > 0) {
+                fprintf(file, "  add dword buffer[%d], %d\n", index, sum);
+            } else if (sum < 0) {
+                fprintf(file, "  sub dword buffer[%d], %d\n", index, -sum);
             }
-            dcell = 0;
-        }
-        if ((prev_char == '>' || prev_char == '<') &&
-            (curr_char != '>' && curr_char != '<')) {
-            if (dindex > 0) {
-                fprintf(file, "  add rbx, %d\n", dindex);
-            } else if (dindex < 0) {
-                fprintf(file, "  sub rbx, %d\n", -dindex);
-            }
-            dindex = 0;
+            sum = 0;
         }
         switch (curr_char) {
             case '+':
-                dcell++;
+                sum++;
                 break;
             case '-':
-                dcell--;
+                sum--;
                 break;
             case '>':
-                dindex++;
+                index++;
                 break;
             case '<':
-                dindex--;
+                index--;
                 break;
             case '.':
-                fprintf(file, "  call _printcell\n");
+                fprintf(file, "  mov ecx, dword buffer[%d]\n", index);
+                fprintf(file, "  call _printecx\n");
                 break;
             case '[':
+                loop_count++;
+                fprintf(file, "loop%d:\n", loop_count);
                 break;
             case ']':
+                fprintf(file, "  cmp dword buffer[%d], 0\n", index);
+                fprintf(file, "  jne loop%d\n", loop_count);
                 break;
             case ',':
                 break;

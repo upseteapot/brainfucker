@@ -1,34 +1,29 @@
 section .data
-  x db 0
-  buffer times 5 dd 0
+  x dd 0
+  buffer times 3 dd 0
 section .text
   global _start
-_printcell:
-  mov rcx, [rbx]
-  mov [x], rcx
+_printecx:
+  mov [x], ecx
   mov rax, 1
   mov rdi, 1
   mov rsi, x
-  mov rdx, 4
+  mov rdx, 1
   syscall
   ret
 _start:
-  mov rbx, buffer
-  add rbx, 3
-  add dword [rbx], 48
-  call _printcell
-  add rbx, 1
-  add dword [rbx], 50
-  call _printcell
-  sub rbx, 2
-  add dword [rbx], 52
-  call _printcell
-  sub rbx, 1
-  add dword [rbx], 48
-  call _printcell
-  sub rbx, 1
-  add dword [rbx], 10
-  call _printcell
+  add dword buffer[0], 10
+  add dword buffer[1], 48
+  add dword buffer[2], 10
+loop1:
+  mov ecx, dword buffer[1]
+  call _printecx
+  add dword buffer[1], 1
+  mov ecx, dword buffer[0]
+  call _printecx
+  sub dword buffer[2], 1
+  cmp dword buffer[2], 0
+  jne loop1
   mov rax, 60
   mov rdi, 0
   syscall
