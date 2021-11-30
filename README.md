@@ -1,5 +1,6 @@
 # Brainfucker
 **WORK IN PROGRESS**  
+**Requirement (for now): Linux x86_64**
 - [x] Simplified simulation
 - [x] Simplified assembly generation
 - [ ] Multiple loops
