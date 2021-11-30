@@ -3,7 +3,7 @@
 - [x] Simplified simulation
 - [x] Simplified assembly generation
 - [ ] Multiple loops
-- [ ] Advanced brainfuck
+- [ ] Advanced brainfuck  
 A minimal brainfuck compiler implemented in C.
 ## Usage
 First, build the brainfuck compiler with the *make* command. A new executable named as *brainfucker* should appear in the same directory.  
