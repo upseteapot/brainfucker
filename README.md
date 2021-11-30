@@ -1,4 +1,7 @@
 # Brainfucker
+**WORK IN PROGRESS**  
+**Compilation is done! You can compile your brainfuck files into an executable.**  
+**Advanced brainfuck (file mode) not included yet.**  
 A minimal brainfuck compiler implemented in C.
 ## Usage
 First, build the brainfuck compiler with the *make* command. A new executable named as *brainfucker* should appear in the same directory.  
@@ -14,7 +17,12 @@ Formats a brainfuck file, which means delete all whitespaces and new line charct
 ./brainfucker for path-to-file.b new-file-path.b
 ```  
 **(asm) generate x86_64 assembly**  
-Generates x86_64 assembly code. The output file will be created in the same directory as the source file, following this file pattern: *file_name.b.asm*.
+Generates x86_64 assembly code. The output file will be created in the directory where the 'brainfucker' was called in, following this name pattern: *file_name.b.asm*.
 ```
 ./brainfucker asm path-to-file.b
+```
+**(com) compile brainfuck**
+Generates x86_64 assembly code, converts it to binary format and link it. The executable will be created and named based on the provided path.
+```
+./brainfucker com path-to-file.b path-to-exe
 ```

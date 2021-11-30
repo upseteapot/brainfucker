@@ -3,7 +3,7 @@
 
 void deque_create(Deque *deque, uint32_t size, uint32_t start)
 {
-    deque->stack = malloc(size * sizeof(int32_t));
+    deque->stack = (int32_t *)malloc(size * sizeof(int32_t));
     deque->size  = size;
     deque->index = start;
     memset(deque->stack, 0, size * sizeof(int32_t));

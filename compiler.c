@@ -14,17 +14,17 @@ char *format_file(const char *file_path)
     }
     fseek(file, 0, SEEK_END);
     uint32_t size = ftell(file);
-    char *formatted_file = malloc(size + 1);
+    char *formatted_file = (char *)malloc(size + 1);
     rewind(file);
-    int delete = 0;
+    int delete_flag = 0;
     uint32_t index = 0;
     char current;
     while ((current = fgetc(file)) != EOF) {
         if (current == '#') {
-            delete = 1;
+            delete_flag = 1;
         } else if (current == '\n') {
-            delete = 0;
-        } else if (!delete && current != ' ') {
+            delete_flag = 0;
+        } else if (!delete_flag && current != ' ') {
             formatted_file[index++] = current;
         }
     }
@@ -100,21 +100,32 @@ void get_deque_info(char *formatted_file, uint32_t *size, uint32_t *start)
 
 int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint32_t start)
 {
-    FILE *file = fopen(strcat(file_name, ".asm"), "w");
+    char *new_file_name = (char *)malloc(strlen(file_name) + 5);
+    sprintf(new_file_name, "%s.asm", file_name);
+    FILE *file = fopen(new_file_name, "w");
     if (file == NULL) {
         printf("[NOTE]: Could not create '%s'.\n", strcat(file_name, ".asm"));
         return -1;
     }
     fprintf(file, "section .data\n");
-    fprintf(file, "  x dd 0\n");
+    fprintf(file, "  current db 0\n");
+    fprintf(file, "  input times 2 db 0\n");
     fprintf(file, "  buffer times %d dd 0\n", size);
     fprintf(file, "section .text\n");
     fprintf(file, "  global _start\n");
-    fprintf(file, "_printecx:\n");
-    fprintf(file, "  mov [x], ecx\n");
+    fprintf(file, "_input:\n");
+    fprintf(file, "  mov rax, 0\n");
+    fprintf(file, "  mov rdi, 0\n");
+    fprintf(file, "  mov rsi, input\n");
+    fprintf(file, "  mov rdx, 2\n");
+    fprintf(file, "  syscall\n");
+    fprintf(file, "  mov cl, input[0]\n");
+    fprintf(file, "  ret\n");
+    fprintf(file, "_print:\n");
+    fprintf(file, "  mov [current], cl\n");
     fprintf(file, "  mov rax, 1\n");
     fprintf(file, "  mov rdi, 1\n");
-    fprintf(file, "  mov rsi, x\n");
+    fprintf(file, "  mov rsi, current\n");
     fprintf(file, "  mov rdx, 1\n");
     fprintf(file, "  syscall\n");
     fprintf(file, "  ret\n");
@@ -149,8 +160,8 @@ int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint
                 index--;
                 break;
             case '.':
-                fprintf(file, "  mov ecx, dword buffer[%d]\n", index);
-                fprintf(file, "  call _printecx\n");
+                fprintf(file, "  mov cl, byte buffer[%d]\n", index);
+                fprintf(file, "  call _print\n");
                 break;
             case '[':
                 loop_count++;
@@ -161,6 +172,8 @@ int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint
                 fprintf(file, "  jne loop%d\n", loop_count);
                 break;
             case ',':
+                fprintf(file, "  call _input\n");
+                fprintf(file, "  mov byte buffer[%d], cl\n", index);
                 break;
             default:
                 printf("[NOTE]: Unknow instruction '%c'.\n", formatted_file[i]);
@@ -172,6 +185,40 @@ int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint
     fprintf(file, "  mov rax, 60\n");
     fprintf(file, "  mov rdi, 0\n");
     fprintf(file, "  syscall\n");
+    fclose(file);
+    free(new_file_name);
+    return 0;
+}
+
+int run_echoed_command(char *command)
+{
+    printf("[NOTE]: %s\n", command);
+    return system(command);
+}
+
+int execute_commands(char *name, char *exe_name) 
+{
+    char *nasm_command = malloc(27 + 6 * strlen(name) + 1);
+    char *ld_command = malloc(11 + 6 * strlen(name) + 1);
+    char *clean_command = malloc(20 + 6 * strlen(name) + 1);
+    sprintf(nasm_command, "nasm -felf64 -o %s.b.o %s.b.asm", name, name);
+    sprintf(ld_command, "ld -o %s %s.b.o", exe_name, name);
+    sprintf(clean_command, "rm %s.b.asm && rm %s.b.o", name, name);
+    if (run_echoed_command(nasm_command) != 0) {
+        printf("[NOTE]: Failed to summon 'nasm'.\n");
+        return -1;
+    }
+    if (run_echoed_command(ld_command) != 0) {
+        printf("[NOTE]: Failed to summon 'ld'.\n");
+        return -1;
+    }
+    if (run_echoed_command(clean_command) != 0) {
+        printf("[NOTE]: Failed to remove build files.\n");
+        return -1;
+    }
+    free(nasm_command);
+    free(ld_command);
+    free(clean_command);
     return 0;
 }
 
@@ -225,6 +272,7 @@ int format(int argc, char **argv)
     }
     fprintf(new_file, formatted_file);
     fclose(new_file);
+    free(formatted_file);
     return 0;
 }
 
@@ -242,12 +290,44 @@ int assemble(int argc, char **argv)
     if (generate_assembly(argv[2], formatted_file, size, start) == -1) {
         printf("[NOTE]: Assembly generation failed.\n");
         return -1;
+
     }
+    free(formatted_file);
+    return 0;
+}
+
+int compile(int argc, char **argv)
+{
+    printf("[NOTE]: Formatting '%s'.\n", argv[2]);
+    char *formatted_file = format_file(argv[2]);
+    if (formatted_file == NULL) {
+        printf("[NOTE]: Formatation failed.\n");
+        return -1;
+    }
+    uint32_t size, start;
+    get_deque_info(formatted_file, &size, &start);
+    printf("[NOTE]: Generating assembly code to '%s.asm'.\n", argv[2]);
+    if (generate_assembly(argv[2], formatted_file, size, start) == -1) {
+        printf("[NOTE]: Assembly generation failed.\n");
+        return -1;
+    
+    }
+    char *wildcard_index = strchr(argv[2], '.');
+    size_t name_size = wildcard_index - argv[2];
+    char *name = malloc(name_size + 1);
+    memcpy(name, argv[2], name_size);
+    name[name_size] = '\0';
+    if (execute_commands(name, argv[3]) == -1) {
+        return -1;
+    }
+    free(name);    
     return 0;
 }
 
 
 // TODO: Implement a better input system
+// TODO: Check if provided is input is one byte long
+// TODO: Refactor / clean code
 int main(int argc, char **argv)
 {
     if (strcmp(argv[1], "sim") == 0) {
@@ -255,7 +335,8 @@ int main(int argc, char **argv)
             fprintf(stderr, "[ERROR]: Simulation failed.\n");
             return -1;
         }
-    } 
+    }
+
     else if (strcmp(argv[1], "for") == 0) {
         if (format(argc, argv) == -1) {
             fprintf(stderr, "[ERROR]: Formatation failed.\n");
@@ -269,10 +350,18 @@ int main(int argc, char **argv)
             return -1;
         }
     }
+    
+    else if (strcmp(argv[1], "com") == 0) {
+        if (compile(argc, argv) == -1) {
+            fprintf(stderr, "[ERROR]: Compilation failed.\n");
+            return -1;
+        }
+    }
 
     else if (strcmp(argv[1], "--help") == 0) {
         print_usage();
     }
+
     else {
         fprintf(stderr, "[ERROR]: Unknow command '%s'\n", argv[1]);
         print_usage();
