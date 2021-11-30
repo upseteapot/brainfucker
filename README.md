@@ -21,7 +21,7 @@ Generates x86_64 assembly code. The output file will be created in the directory
 ```
 ./brainfucker asm path-to-file.b
 ```
-**(com) compile brainfuck**
+**(com) compile**  
 Generates x86_64 assembly code, converts it to binary format and link it. The executable will be created and named based on the provided path.
 ```
 ./brainfucker com path-to-file.b path-to-exe
