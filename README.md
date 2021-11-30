@@ -1,7 +1,7 @@
 # Brainfucker
 **WORK IN PROGRESS**  
-- [ ] Simplified simulation
-- [ ] Simplified assembly generation
+- [x] Simplified simulation
+- [x] Simplified assembly generation
 - [ ] Multiple loops
 - [ ] Advanced brainfuck
 A minimal brainfuck compiler implemented in C.
@@ -44,7 +44,8 @@ In the standart brainfuck programming language we have a buffer of integers, eac
 <        # Move cursor to the cell on the left.
 [        # Start of loop.
 ]        # End of loop, if the value on the current cell is equal to 0, break loop.
-.        # Print the current cell value, for instance, if the value stored is 48, it will print '0', because the ASCII value of 0 is 48.
+.        # Print the current cell value, for instance, if the value stored is 48, 
+           it will print '0', because the ASCII code for 0 is 48.
 ,        # Accept one byte (char) as input and store it in the current cell.
 #        # This is used to create comments :)
 ```
