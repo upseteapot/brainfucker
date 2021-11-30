@@ -198,9 +198,9 @@ int run_echoed_command(char *command)
 
 int execute_commands(char *name, char *exe_name) 
 {
-    char *nasm_command = malloc(27 + 6 * strlen(name) + 1);
-    char *ld_command = malloc(11 + 6 * strlen(name) + 1);
-    char *clean_command = malloc(20 + 6 * strlen(name) + 1);
+    char *nasm_command = malloc(27 + 2 * strlen(name) + 1);
+    char *ld_command = malloc(11 + 2 * strlen(name) + 1);
+    char *clean_command = malloc(20 + 2 * strlen(name) + 1);
     sprintf(nasm_command, "nasm -felf64 -o %s.b.o %s.b.asm", name, name);
     sprintf(ld_command, "ld -o %s %s.b.o", exe_name, name);
     sprintf(clean_command, "rm %s.b.asm && rm %s.b.o", name, name);
