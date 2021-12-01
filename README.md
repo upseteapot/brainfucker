@@ -3,7 +3,7 @@
 **Requirement (for now): Linux x86_64**
 - [x] Simplified simulation
 - [x] Simplified assembly generation
-- [ ] Multiple loops
+- [x] Multiple loops
 - [ ] Advanced brainfuck
 
 A minimal brainfuck compiler implemented in C.
