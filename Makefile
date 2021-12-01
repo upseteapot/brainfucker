@@ -1,5 +1,5 @@
 CC     := gcc
-FLAGS  := -Wall -Wextra -pedantic -std=c11
+FLAGS  := -Wall -Wextra -pedantic -std=c11 -ggdb
 TARGET := brainfucker
 
 all: clean main

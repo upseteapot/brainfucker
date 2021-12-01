@@ -52,7 +52,3 @@ In the standart brainfuck programming language we have a buffer of integers, eac
 #        # This is used to create comments :)
 ```
 There is also an extension to the brainfuck language, know as 'Advanced Brainfuck', it introduces the 'file mode' that gives you the ability to open and manipulate files. So, yes, it is possible to create a brainfuck compiler using brainfuck if you are asking.  
-With this set of instructions you can create whatever you want, for instance, take a look at a very simple 'Hello world!' project for brainfuck:
-```brainfuck
-++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
-```

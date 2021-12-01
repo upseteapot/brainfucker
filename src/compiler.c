@@ -2,7 +2,7 @@
 #include "stdlib.h"
 #include "stdint.h"
 #include "string.h"
-#include "deque.h"
+#include "cells.h"
 
 
 char *format_file(const char *file_path)
@@ -33,45 +33,43 @@ char *format_file(const char *file_path)
     return formatted_file;
 }
 
-int interpret_code(const char *formatted_file, Deque *deque)
+int interpret_code(const char *formatted_file, Deque *cells)
 {
     int32_t *current;
     uint32_t loop_addr[100];
-    uint32_t loop_count = 0;
     uint32_t loop_index = 0;
     for (uint32_t i=0; i < strlen(formatted_file); i++) {
         switch (formatted_file[i]) {
             case '+':
-                current = deque_get(deque);
+                current = cells_get(cells);
                 (*current)++;
                 break;
             case '-':
-                current = deque_get(deque);
+                current = cells_get(cells);
                 (*current)--;
                 break;
             case '>':
-                deque_next(deque);
+                cells_next(cells);
                 break;
             case '<':
-                deque_prev(deque);
+                cells_prev(cells);
                 break;
             case '.':
-                printf("%c", *deque_get(deque));
+                printf("%c", *cells_get(cells));
                 break;
             case '[':
-                loop_addr[loop_index] = loop_count;
                 loop_index++;
-                loop_count++;
+                loop_addr[loop_index] = i;
                 break;
             case ']':
-                if (*deque_get(deque) != 0) { 
-                    i = loop_addr[loop_index];
-                } else {
+                if (*cells_get(cells) == 0) { 
                     loop_index--;
+                } else {
+                    i = loop_addr[loop_index];
                 }
                 break;
             case ',':
-                *deque_get(deque) = fgetc(stdin);
+                *cells_get(cells) = fgetc(stdin);
                 break;
             default:
                 printf("[NOTE]: Unknow instruction '%c'.\n", formatted_file[i]);
@@ -82,7 +80,7 @@ int interpret_code(const char *formatted_file, Deque *deque)
     return 0;
 }
 
-void get_deque_info(char *formatted_file, uint32_t *size, uint32_t *start)
+void get_cells_info(char *formatted_file, uint32_t *size, uint32_t *start)
 {
     int32_t current = 0;
     int32_t max     = 0;
@@ -136,8 +134,13 @@ int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint
     fprintf(file, "  syscall\n");
     fprintf(file, "  ret\n");
     fprintf(file, "_start:\n");
-    int32_t sum = 0;
-    int32_t index = start;
+    fprintf(file, "  mov rbx, buffer\n");
+    if (start != 0) {
+        fprintf(file, "  add rbx, %d", start * 4);
+    }
+    int32_t change_cell  = 0;
+    int32_t change_index = 0;
+    uint32_t loop_addr[100];
     uint32_t loop_count = 0;
     uint32_t loop_index = 0;
     char prev_char = ' ';
@@ -146,43 +149,53 @@ int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint
         curr_char = formatted_file[i];
         if ((prev_char == '+' || prev_char == '-') &&
             (curr_char != '+' && curr_char != '-')) {
-            if (sum > 0) {
-                fprintf(file, "  add dword buffer[%d], %d\n", index, sum);
-            } else if (sum < 0) {
-                fprintf(file, "  sub dword buffer[%d], %d\n", index, -sum);
+            if (change_cell > 0) {
+                fprintf(file, "  add dword [rbx], %d\n", change_cell);
+            } else if (change_cell < 0) {
+                fprintf(file, "  sub dword [rbx], %d\n", -change_cell);
             }
-            sum = 0;
+            change_cell = 0;
+        }
+        if ((prev_char == '>' || prev_char == '<') &&
+            (curr_char != '>' && curr_char != '<')) {
+            if (change_index > 0) {
+                fprintf(file, "  add rbx, %d\n", change_index * 4);
+            } else if (change_index < 0) {
+                fprintf(file, "  sub rbx, %d\n", -change_index * 4);
+            }
+            change_index = 0;
         }
         switch (curr_char) {
             case '+':
-                sum++;
+                change_cell++;
                 break;
             case '-':
-                sum--;
+                change_cell--;
                 break;
             case '>':
-                index++;
+                change_index++;
                 break;
             case '<':
-                index--;
+                change_index--;
                 break;
             case '.':
-                fprintf(file, "  mov cl, byte buffer[%d]\n", index);
+                fprintf(file, "  mov cl, byte [rbx]\n");
                 fprintf(file, "  call _print\n");
                 break;
             case '[':
+                fprintf(file, "loop%d:\n", loop_count);
+                loop_index++;
+                loop_addr[loop_index] = loop_count;
                 loop_count++;
-                loop_index = loop_count;
-                fprintf(file, "loop%d:\n", loop_index);
                 break;
             case ']':
-                fprintf(file, "  cmp dword buffer[%d], 0\n", index);
-                fprintf(file, "  jne loop%d\n", loop_count);
+                fprintf(file, "  cmp dword [rbx], 0\n");
+                fprintf(file, "  jne loop%d\n", loop_addr[loop_index]);
                 loop_index--;
                 break;
             case ',':
                 fprintf(file, "  call _input\n");
-                fprintf(file, "  mov byte buffer[%d], cl\n", index);
+                fprintf(file, "  mov byte [rbx], cl\n");
                 break;
             default:
                 printf("[NOTE]: Unknow instruction '%c'.\n", formatted_file[i]);
@@ -235,7 +248,7 @@ int execute_commands(char *name, char *exe_name)
 void print_usage()
 {
     printf("./brainfucker [mode] [files]          [options]\n");
-    printf("               sim    file             -d (initial deque size)\n");
+    printf("               sim    file             -d (initial cells size)\n");
     printf("               for    file  new_file\n");
     printf("               asm    file\n");
     printf("               com    file  output\n");
@@ -251,17 +264,17 @@ int simulate(int argc, char **argv)
     }
     printf("[NOTE]: Interpreting code.\n");
     uint32_t size, start;
-    get_deque_info(formatted_file, &size, &start);
-    Deque deque;
-    deque_create(&deque, size, start);
-    if (interpret_code(formatted_file, &deque)) {
+    get_cells_info(formatted_file, &size, &start);
+    Deque cells;
+    cells_create(&cells, size, start);
+    if (interpret_code(formatted_file, &cells)) {
         printf("[NOTE]: Interpretation failed.\n");
-        deque_free(&deque);
+        cells_free(&cells);
         free(formatted_file);
         return -1;
     }
     printf("\n[NOTE]: Exiting.\n");
-    deque_free(&deque);
+    cells_free(&cells);
     free(formatted_file);
     return 0;
 }
@@ -294,7 +307,7 @@ int assemble(int argc, char **argv)
         return -1;
     }
     uint32_t size, start;
-    get_deque_info(formatted_file, &size, &start);
+    get_cells_info(formatted_file, &size, &start);
     printf("[NOTE]: Generating assembly code to '%s.asm'.\n", argv[2]);
     if (generate_assembly(argv[2], formatted_file, size, start) == -1) {
         printf("[NOTE]: Assembly generation failed.\n");
@@ -314,7 +327,7 @@ int compile(int argc, char **argv)
         return -1;
     }
     uint32_t size, start;
-    get_deque_info(formatted_file, &size, &start);
+    get_cells_info(formatted_file, &size, &start);
     printf("[NOTE]: Generating assembly code to '%s.asm'.\n", argv[2]);
     if (generate_assembly(argv[2], formatted_file, size, start) == -1) {
         printf("[NOTE]: Assembly generation failed.\n");
@@ -336,6 +349,8 @@ int compile(int argc, char **argv)
 
 // TODO: Implement a better input system
 // TODO: Check if provided is input is one byte long
+// TODO: Fix move cursor inside loop problem
+// TODO: Create dynamic array for loops
 // TODO: Refactor / clean code
 int main(int argc, char **argv)
 {
