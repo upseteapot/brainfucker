@@ -36,7 +36,9 @@ char *format_file(const char *file_path)
 int interpret_code(const char *formatted_file, Deque *deque)
 {
     int32_t *current;
-    uint32_t loop_start;
+    uint32_t loop_addr[100];
+    uint32_t loop_count = 0;
+    uint32_t loop_index = 0;
     for (uint32_t i=0; i < strlen(formatted_file); i++) {
         switch (formatted_file[i]) {
             case '+':
@@ -57,11 +59,15 @@ int interpret_code(const char *formatted_file, Deque *deque)
                 printf("%c", *deque_get(deque));
                 break;
             case '[':
-                loop_start = i;
+                loop_addr[loop_index] = loop_count;
+                loop_index++;
+                loop_count++;
                 break;
             case ']':
                 if (*deque_get(deque) != 0) { 
-                    i = loop_start;
+                    i = loop_addr[loop_index];
+                } else {
+                    loop_index--;
                 }
                 break;
             case ',':
@@ -133,6 +139,7 @@ int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint
     int32_t sum = 0;
     int32_t index = start;
     uint32_t loop_count = 0;
+    uint32_t loop_index = 0;
     char prev_char = ' ';
     char curr_char = ' ';
     for (uint32_t i=0; i < strlen(formatted_file); i++) {
@@ -165,11 +172,13 @@ int generate_assembly(char *file_name, char *formatted_file, uint32_t size, uint
                 break;
             case '[':
                 loop_count++;
-                fprintf(file, "loop%d:\n", loop_count);
+                loop_index = loop_count;
+                fprintf(file, "loop%d:\n", loop_index);
                 break;
             case ']':
                 fprintf(file, "  cmp dword buffer[%d], 0\n", index);
                 fprintf(file, "  jne loop%d\n", loop_count);
+                loop_index--;
                 break;
             case ',':
                 fprintf(file, "  call _input\n");

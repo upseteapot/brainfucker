@@ -4,8 +4,8 @@ TARGET := brainfucker
 
 all: clean main
 
-main: ./*.c
-	$(CC) $(FLAGS) -o $(TARGET) -I./ $^
+main: ./src/*.c
+	$(CC) $(FLAGS) -o $(TARGET) -Iinclude/ $^
 
 clean:
 	rm -f brainfucker
