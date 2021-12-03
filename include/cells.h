@@ -8,9 +8,9 @@
 
 typedef struct
 {
-    int32_t *buffer;
-    uint32_t size;
-    uint32_t index;
+  int32_t *buffer;
+  uint32_t size;
+  uint32_t index;
 } Deque;
 
 void      cells_create(Deque *, uint32_t, uint32_t);
