@@ -9,16 +9,16 @@
 typedef struct
 {
   int32_t *buffer;
-  uint32_t size;
-  uint32_t index;
-} Deque;
+  size_t size;
+  size_t index;
+} Cells;
 
-void      cells_create(Deque *, uint32_t, uint32_t);
-void      cells_free(Deque *);
-void      cells_next(Deque *);
-void      cells_prev(Deque *);
-int32_t  *cells_get(Deque *);
-void      cells_print(Deque *);
+void      cells_create(Cells *, size_t, size_t);
+void      cells_free(Cells *);
+void      cells_next(Cells *);
+void      cells_prev(Cells *);
+int32_t  *cells_get(Cells *);
+void      cells_print(Cells *);
 
 #endif
 
