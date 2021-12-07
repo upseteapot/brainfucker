@@ -10,10 +10,8 @@ int simulate(char *file)
     return -1;
   }
   printf("[NOTE]: Interpreting code.\n");
-  size_t size, start;
-  get_cells_info(formatted_file, &size, &start);
   Cells cells;
-  cells_create(&cells, size, start);
+  cells_create(&cells, 2048, 2048 / 2);
   if (interpret_code(formatted_file, &cells)) {
     printf("[NOTE]: Interpretation failed.\n");
     cells_free(&cells);
@@ -53,10 +51,8 @@ int assemble(char *file, char *output)
     printf("[NOTE]: Formatation failed.\n");
     return -1;
   }
-  size_t size, start;
-  get_cells_info(formatted_file, &size, &start);
   printf("[NOTE]: Generating assembly code to '%s'.\n", output);
-  if (generate_assembly(output, formatted_file, size, start) == -1) {
+  if (generate_assembly(output, formatted_file, 2048, 2048 / 2) == -1) {
     printf("[NOTE]: Assembly generation failed.\n");
     return -1;
   }
@@ -72,12 +68,10 @@ int compile(char *file, char *output)
     printf("[NOTE]: Formatation failed.\n");
     return -1;
   }
-  size_t size, start;
-  get_cells_info(formatted_file, &size, &start);
   char *asm_file = malloc(strlen(file) + 5);
   sprintf(asm_file, "%s.asm", file);
   printf("[NOTE]: Generating assembly code to '%s'.\n", asm_file);
-  if (generate_assembly(asm_file, formatted_file, size, start) == -1) {
+  if (generate_assembly(asm_file, formatted_file, 2048, 2048 / 2) == -1) {
     printf("[NOTE]: Assembly generation failed.\n");
     return -1;
 

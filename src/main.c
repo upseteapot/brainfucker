@@ -26,12 +26,8 @@ void assert_mode(char *mode, int callback)
   }
 }
 
-// TODO: fix compilation
-// TODO: Check if provided is input is one byte long
-// TODO: Refactor / clean code
 int main(int argc, char **argv)
 {
-  
   if (argc == 1) {
     fprintf(stderr, "[ERROR]: Please provide a mode.\n");
     return -1;
@@ -60,8 +56,6 @@ int main(int argc, char **argv)
       return -1;
     }
   }
-
   return 0;
-
 }
 

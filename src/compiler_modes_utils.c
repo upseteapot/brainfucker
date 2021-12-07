@@ -51,7 +51,10 @@ int interpret_code(const char *formatted_file, Cells *cells)
         cells_prev(cells);
         break;
       case '.':
-        printf("%c", *cells_get(cells));
+        printf("%c", (char)*cells_get(cells));
+        break;
+      case ',':
+        *cells_get(cells) = fgetc(stdin);
         break;
       case '[':
         idxstack_push(&loop_index, i);
@@ -63,38 +66,15 @@ int interpret_code(const char *formatted_file, Cells *cells)
           i = idxstack_get_last(&loop_index);
         }
         break;
-      case ',':
-        *cells_get(cells) = fgetc(stdin);
-        break;
       default:
         printf("[NOTE]: Unknow instruction '%c'.\n", formatted_file[i]);
+        idxstack_free(&loop_index);
         return -1;
         break;
     }
   }
+  idxstack_free(&loop_index);
   return 0;
-}
-
-void get_cells_info(char *formatted_file, size_t *size, size_t *start)
-{
-  int32_t current = 0;
-  int32_t max     = 0;
-  int32_t min     = 0;
-  for (size_t i=0; i < strlen(formatted_file); i++) {
-    if (formatted_file[i] == '>') {
-      current++;
-      if (current > max) {
-        max = current;
-      }
-    } else if (formatted_file[i] == '<') {
-      current--;
-      if (current < min) {
-        min = current;
-      }
-    }
-  }
-  *size = max - min + 1;
-  *start = -min;
 }
 
 int generate_assembly(char *file_name, char *formatted_file, size_t size, size_t start)
@@ -129,7 +109,7 @@ int generate_assembly(char *file_name, char *formatted_file, size_t size, size_t
   fprintf(file, "_start:\n");
   fprintf(file, "  mov rbx, buffer\n");
   if (start != 0) {
-    fprintf(file, "  add rbx, %zu", start * 4);
+    fprintf(file, "  add rbx, %zu\n", start * 4);
   }
   int32_t change_cell  = 0;
   int32_t change_index = 0;
@@ -190,6 +170,8 @@ int generate_assembly(char *file_name, char *formatted_file, size_t size, size_t
         break;
       default:
         printf("[NOTE]: Unknow instruction '%c'.\n", formatted_file[i]);
+        fclose(file);
+        idxstack_free(&loop_index);
         return -1;
         break;
     }
@@ -199,6 +181,7 @@ int generate_assembly(char *file_name, char *formatted_file, size_t size, size_t
   fprintf(file, "  mov rdi, 0\n");
   fprintf(file, "  syscall\n");
   fclose(file);
+  idxstack_free(&loop_index);
   return 0;
 }
 

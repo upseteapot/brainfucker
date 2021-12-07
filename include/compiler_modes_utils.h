@@ -8,12 +8,11 @@
 #include "cells.h"
 #include "stack.h"
 
-char *format_file(const char *file_path);
-int interpret_code(const char *formatted_file, Cells *cells);
-void get_cells_info(char *formatted_file, size_t *size, size_t *start);
-int generate_assembly(char *file_name, char *formatted_file, size_t size, size_t start);
-int run_echoed_command(char *command);
-int execute_commands(char *name, char *exe_name); 
+char *format_file(const char *);
+int interpret_code(const char *, Cells *);
+int generate_assembly(char *, char *, size_t, size_t);
+int run_echoed_command(char *);
+int execute_commands(char *, char *); 
 
 #endif
 

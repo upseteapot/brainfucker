@@ -18,6 +18,7 @@ void      cells_free(Cells *);
 void      cells_next(Cells *);
 void      cells_prev(Cells *);
 int32_t  *cells_get(Cells *);
+int32_t  *cells_get_at(Cells *, size_t index);
 void      cells_print(Cells *);
 
 #endif

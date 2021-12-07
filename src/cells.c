@@ -1,11 +1,11 @@
 #include "cells.h"
 
 
-void cells_create(Cells *cells, size_t size, size_t start)
+void cells_create(Cells *cells, size_t size, size_t index)
 {
   cells->buffer = (int32_t *)malloc(size * sizeof(int32_t));
-  cells->size  = size;
-  cells->index = start;
+  cells->size   = size;
+  cells->index  = index;
   memset(cells->buffer, 0, size * sizeof(int32_t));
 }
 
@@ -27,6 +27,11 @@ void cells_prev(Cells *cells)
 int32_t *cells_get(Cells *cells)
 {
   return cells->buffer+cells->index;
+}
+
+int32_t *cells_get_at(Cells *cells, size_t index)
+{
+  return cells->buffer+index;
 }
 
 void cells_print(Cells *cells)
